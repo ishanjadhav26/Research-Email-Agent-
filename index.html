@@ -1,0 +1,818 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Research Email Agent Dashboard</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #030712;
+            --card-bg: rgba(17, 24, 39, 0.65);
+            --border-color: rgba(255, 255, 255, 0.08);
+            --text-primary: #f3f4f6;
+            --text-secondary: #9ca3af;
+            --accent-primary: #8b5cf6;
+            --accent-secondary: #06b6d4;
+            --accent-glow: rgba(139, 92, 246, 0.3);
+            --success: #10b981;
+            --error: #ef4444;
+            --font-display: 'Outfit', sans-serif;
+            --font-body: 'Inter', sans-serif;
+            --font-mono: 'Fira Code', monospace;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(139, 92, 246, 0.15) 0%, transparent 40%),
+                radial-gradient(circle at 90% 80%, rgba(6, 182, 212, 0.12) 0%, transparent 45%);
+            color: var(--text-primary);
+            font-family: var(--font-body);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            align-items: center;
+            padding: 2rem 1.5rem;
+            overflow-x: hidden;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1100px;
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+
+        /* Header section styling */
+        header {
+            text-align: center;
+            margin-bottom: 1rem;
+            animation: fadeIn 0.8s ease-out;
+        }
+
+        header h1 {
+            font-family: var(--font-display);
+            font-size: 3rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #fff 30%, var(--accent-primary) 70%, var(--accent-secondary) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -0.03em;
+            margin-bottom: 0.5rem;
+        }
+
+        header p {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+            font-weight: 400;
+            max-width: 600px;
+            margin: 0 auto;
+            line-height: 1.5;
+        }
+
+        /* Glassmorphism Card Style */
+        .glass-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+
+        .glass-card:hover {
+            border-color: rgba(139, 92, 246, 0.2);
+        }
+
+        /* Input section styling */
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+        }
+
+        .input-group label {
+            font-family: var(--font-display);
+            font-size: 1.1rem;
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        .input-row {
+            display: flex;
+            gap: 1rem;
+            position: relative;
+        }
+
+        .topic-input {
+            flex: 1;
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1rem 1.25rem;
+            color: #fff;
+            font-family: var(--font-body);
+            font-size: 1.05rem;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        .topic-input:focus {
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 3px var(--accent-glow);
+            background: rgba(15, 23, 42, 0.8);
+        }
+
+        .btn-run {
+            background: linear-gradient(135deg, var(--accent-primary) 0%, #7c3aed 100%);
+            border: none;
+            border-radius: 12px;
+            color: white;
+            font-family: var(--font-display);
+            font-size: 1.05rem;
+            font-weight: 600;
+            padding: 0 2rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            min-width: 160px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(124, 58, 237, 0.3);
+        }
+
+        .btn-run:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(124, 58, 237, 0.5);
+            background: linear-gradient(135deg, #9333ea 0%, #6d28d9 100%);
+        }
+
+        .btn-run:active:not(:disabled) {
+            transform: translateY(0);
+        }
+
+        .btn-run:disabled {
+            background: #374151;
+            color: #9ca3af;
+            box-shadow: none;
+            cursor: not-allowed;
+        }
+
+        /* Spinner for loading state */
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 0.8s linear infinite;
+            display: none;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Dashboard layout after running */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 2rem;
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        @media (min-width: 900px) {
+            .dashboard-grid {
+                grid-template-columns: 350px 1fr;
+            }
+        }
+
+        /* Progress Steps */
+        .progress-card {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .progress-card h2 {
+            font-family: var(--font-display);
+            font-size: 1.3rem;
+            font-weight: 600;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.75rem;
+        }
+
+        .steps-container {
+            display: flex;
+            flex-direction: column;
+            gap: 1.25rem;
+            position: relative;
+        }
+
+        .steps-container::before {
+            content: '';
+            position: absolute;
+            left: 17px;
+            top: 15px;
+            bottom: 15px;
+            width: 2px;
+            background: var(--border-color);
+            z-index: 1;
+        }
+
+        .step-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+            position: relative;
+            z-index: 2;
+        }
+
+        .step-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: #111827;
+            border: 2px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+        }
+
+        .step-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.15rem;
+            padding-top: 0.25rem;
+        }
+
+        .step-title {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            transition: color 0.3s;
+        }
+
+        .step-status {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+
+        /* Step states */
+        .step-item.active .step-icon {
+            border-color: var(--accent-primary);
+            color: var(--accent-primary);
+            box-shadow: 0 0 10px var(--accent-glow);
+            background: rgba(139, 92, 246, 0.1);
+        }
+
+        .step-item.active .step-title {
+            color: var(--text-primary);
+        }
+
+        .step-item.completed .step-icon {
+            border-color: var(--success);
+            color: var(--success);
+            background: rgba(16, 185, 129, 0.15);
+        }
+
+        .step-item.completed .step-title {
+            color: var(--success);
+        }
+
+        .step-item.failed .step-icon {
+            border-color: var(--error);
+            color: var(--error);
+            background: rgba(239, 68, 68, 0.15);
+        }
+
+        .step-item.failed .step-title {
+            color: var(--error);
+        }
+
+        /* Console styling */
+        .console-container {
+            margin-top: 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .console-header {
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-secondary);
+        }
+
+        .console-box {
+            background: #090d16;
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 0.85rem;
+            font-family: var(--font-mono);
+            font-size: 0.85rem;
+            height: 180px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 0.35rem;
+            color: #10b981;
+            scroll-behavior: smooth;
+        }
+
+        .console-line {
+            line-height: 1.4;
+            word-break: break-all;
+        }
+
+        .console-line.err {
+            color: var(--error);
+        }
+
+        .console-line.system {
+            color: var(--text-secondary);
+        }
+
+        /* Output View Section */
+        .output-card {
+            display: flex;
+            flex-direction: column;
+            gap: 1.25rem;
+        }
+
+        .tabs-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .tabs-buttons {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .tab-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            font-family: var(--font-display);
+            font-size: 1rem;
+            font-weight: 600;
+            padding: 0.5rem 1rem;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: all 0.2s;
+            position: relative;
+        }
+
+        .tab-btn:hover {
+            color: var(--text-primary);
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        .tab-btn.active {
+            color: var(--accent-secondary);
+            background: rgba(6, 182, 212, 0.1);
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .btn-action {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-family: var(--font-body);
+            font-size: 0.85rem;
+            font-weight: 500;
+            padding: 0.4rem 0.85rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.35rem;
+            transition: all 0.2s;
+        }
+
+        .btn-action:hover:not(:disabled) {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-action:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .tab-content {
+            display: none;
+            background: #090d16;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.5rem;
+            font-size: 0.95rem;
+            line-height: 1.6;
+            min-height: 380px;
+            max-height: 550px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            position: relative;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .tab-content.placeholder {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            font-style: italic;
+        }
+
+        .tab-content code {
+            font-family: var(--font-mono);
+            font-size: 0.9rem;
+            color: #d1d5db;
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #090d16;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #1f2937;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #374151;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Research Email Agent</h1>
+            <p>Enter a topic to search the web, generate synthesized research summaries, and draft comprehensive emails automatically.</p>
+        </header>
+
+        <!-- Topic input section -->
+        <main class="glass-card">
+            <div class="input-group">
+                <label for="topic">What would you like the agent to research?</label>
+                <div class="input-row">
+                    <input type="text" id="topic" class="topic-input" placeholder="e.g., SpaceX Starship updates or Room Temperature Superconductors breakthrough" autocomplete="off">
+                    <button id="run-btn" class="btn-run">
+                        <span class="spinner" id="run-spinner"></span>
+                        <span id="run-text">Run Agent</span>
+                    </button>
+                </div>
+            </div>
+        </main>
+
+        <!-- Output dashboard grid (always visible to look clean and premium) -->
+        <section class="dashboard-grid">
+            <!-- Left Side: Status Steps & Logs -->
+            <div class="glass-card progress-card">
+                <h2>Execution Progress</h2>
+                
+                <div class="steps-container">
+                    <div class="step-item" id="step-search">
+                        <div class="step-icon">1</div>
+                        <div class="step-info">
+                            <span class="step-title">Web Search</span>
+                            <span class="step-status" id="step-status-search">Waiting...</span>
+                        </div>
+                    </div>
+                    <div class="step-item" id="step-summary">
+                        <div class="step-icon">2</div>
+                        <div class="step-info">
+                            <span class="step-title">Synthesize Research</span>
+                            <span class="step-status" id="step-status-summary">Waiting...</span>
+                        </div>
+                    </div>
+                    <div class="step-item" id="step-email">
+                        <div class="step-icon">3</div>
+                        <div class="step-info">
+                            <span class="step-title">Draft Email</span>
+                            <span class="step-status" id="step-status-email">Waiting...</span>
+                        </div>
+                    </div>
+                    <div class="step-item" id="step-save">
+                        <div class="step-icon">4</div>
+                        <div class="step-info">
+                            <span class="step-title">Save Output</span>
+                            <span class="step-status" id="step-status-save">Waiting...</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="console-container">
+                    <div class="console-header">Live Agent Console</div>
+                    <div class="console-box" id="console-box">
+                        <div class="console-line system">Waiting for research request...</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Side: Outputs -->
+            <div class="glass-card output-card">
+                <div class="tabs-header">
+                    <div class="tabs-buttons">
+                        <button class="tab-btn active" id="tab-btn-email" onclick="switchTab('email')">Generated Email</button>
+                        <button class="tab-btn" id="tab-btn-research" onclick="switchTab('research')">Research Summary</button>
+                    </div>
+                    <div class="action-buttons">
+                        <button class="btn-action" id="btn-copy" onclick="copyActiveContent()" disabled>
+                            <!-- Copy icon -->
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                            <span id="copy-text">Copy</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Tab Contents -->
+                <div id="content-email" class="tab-content active placeholder">
+                    Drafted email will appear here...
+                </div>
+                <div id="content-research" class="tab-content placeholder">
+                    Deep research summary will appear here...
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <script>
+        let currentRunId = null;
+        let pollInterval = null;
+        let currentEmailText = "";
+        let currentResearchText = "";
+        let activeTab = 'email';
+
+        const runBtn = document.getElementById('run-btn');
+        const runText = document.getElementById('run-text');
+        const runSpinner = document.getElementById('run-spinner');
+        const topicInput = document.getElementById('topic');
+        const consoleBox = document.getElementById('console-box');
+        const btnCopy = document.getElementById('btn-copy');
+
+        // Step elements
+        const steps = {
+            web_search: {
+                item: document.getElementById('step-search'),
+                status: document.getElementById('step-status-search')
+            },
+            research_summary: {
+                item: document.getElementById('step-summary'),
+                status: document.getElementById('step-status-summary')
+            },
+            email_generation: {
+                item: document.getElementById('step-email'),
+                status: document.getElementById('step-status-email')
+            },
+            format_and_save: {
+                item: document.getElementById('step-save'),
+                status: document.getElementById('step-status-save')
+            }
+        };
+
+        // Event Listeners
+        runBtn.addEventListener('click', startResearch);
+        topicInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                startResearch();
+            }
+        });
+
+        function switchTab(tabName) {
+            activeTab = tabName;
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+
+            document.getElementById(`tab-btn-${tabName}`).classList.add('active');
+            document.getElementById(`content-${tabName}`).classList.add('active');
+        }
+
+        function copyActiveContent() {
+            const textToCopy = activeTab === 'email' ? currentEmailText : currentResearchText;
+            if (!textToCopy) return;
+
+            navigator.clipboard.writeText(textToCopy).then(() => {
+                const copyTextSpan = document.getElementById('copy-text');
+                copyTextSpan.textContent = 'Copied!';
+                setTimeout(() => {
+                    copyTextSpan.textContent = 'Copy';
+                }, 2000);
+            }).catch(err => {
+                console.error('Could not copy text: ', err);
+            });
+        }
+
+        function appendLog(message, isError = false, isSystem = false) {
+            const line = document.createElement('div');
+            line.className = 'console-line';
+            if (isError) line.classList.add('err');
+            if (isSystem) line.classList.add('system');
+            
+            const timestamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            line.textContent = `[${timestamp}] ${message}`;
+            
+            consoleBox.appendChild(line);
+            consoleBox.scrollTop = consoleBox.scrollHeight;
+        }
+
+        function resetSteps() {
+            Object.keys(steps).forEach(key => {
+                steps[key].item.className = 'step-item';
+                steps[key].status.textContent = 'Waiting...';
+            });
+        }
+
+        function updateStepsUI(currentStep, runStatus) {
+            const stepKeys = Object.keys(steps);
+            let activeFound = false;
+
+            stepKeys.forEach((key, index) => {
+                const stepObj = steps[key];
+                
+                if (runStatus === 'failed' && currentStep === key) {
+                    stepObj.item.className = 'step-item failed';
+                    stepObj.status.textContent = 'Failed';
+                    return;
+                }
+
+                if (currentStep === key) {
+                    if (runStatus === 'completed') {
+                        stepObj.item.className = 'step-item completed';
+                        stepObj.status.textContent = 'Completed';
+                    } else {
+                        stepObj.item.className = 'step-item active';
+                        stepObj.status.textContent = 'In Progress...';
+                    }
+                    activeFound = true;
+                } else if (index < stepKeys.indexOf(currentStep)) {
+                    stepObj.item.className = 'step-item completed';
+                    stepObj.status.textContent = 'Completed';
+                } else {
+                    stepObj.item.className = 'step-item';
+                    stepObj.status.textContent = 'Waiting...';
+                }
+            });
+
+            // Handle the final "done" state
+            if (currentStep === 'done') {
+                stepKeys.forEach(key => {
+                    steps[key].item.className = 'step-item completed';
+                    steps[key].status.textContent = 'Completed';
+                });
+            }
+        }
+
+        function startResearch() {
+            const topic = topicInput.value.trim();
+            if (!topic) return;
+
+            // UI adjustments for running state
+            runBtn.disabled = true;
+            runSpinner.style.display = 'block';
+            runText.textContent = 'Running...';
+            
+            consoleBox.innerHTML = '';
+            appendLog(`Initializing agent for topic: "${topic}"`, false, true);
+            resetSteps();
+            
+            // Clear previous outputs
+            const emailContentDiv = document.getElementById('content-email');
+            const researchContentDiv = document.getElementById('content-research');
+            
+            emailContentDiv.textContent = 'Drafted email will appear here...';
+            emailContentDiv.classList.add('placeholder');
+            
+            researchContentDiv.textContent = 'Deep research summary will appear here...';
+            researchContentDiv.classList.add('placeholder');
+
+            btnCopy.disabled = true;
+            currentEmailText = "";
+            currentResearchText = "";
+
+            if (pollInterval) clearInterval(pollInterval);
+
+            // POST to run API
+            fetch('/api/run', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ topic: topic })
+            })
+            .then(res => {
+                if (!res.ok) throw new Error('Failed to trigger agent run.');
+                return res.json();
+            })
+            .then(data => {
+                currentRunId = data.id;
+                appendLog(`Agent session created. ID: ${currentRunId}`, false, true);
+                // Start polling
+                pollInterval = setInterval(pollStatus, 1500);
+            })
+            .catch(err => {
+                appendLog(err.message, true);
+                stopRunningState();
+            });
+        }
+
+        function stopRunningState() {
+            runBtn.disabled = false;
+            runSpinner.style.display = 'none';
+            runText.textContent = 'Run Agent';
+            if (pollInterval) {
+                clearInterval(pollInterval);
+                pollInterval = null;
+            }
+        }
+
+        function pollStatus() {
+            if (!currentRunId) return;
+
+            fetch(`/api/status?id=${currentRunId}`)
+            .then(res => {
+                if (!res.ok) throw new Error('Error fetching status.');
+                return res.json();
+            })
+            .then(data => {
+                // Update Console Logs
+                consoleBox.innerHTML = '';
+                data.logs.forEach(logLine => {
+                    const isError = logLine.toLowerCase().includes('error:') || logLine.toLowerCase().includes('failed');
+                    const isSystem = logLine.startsWith('Agent session') || logLine.includes('Starting step') || logLine.includes('completed');
+                    appendLog(logLine, isError, isSystem);
+                });
+
+                // Update Steps Progress
+                updateStepsUI(data.step, data.status);
+
+                if (data.status === 'completed') {
+                    appendLog("Agent finished compiling output.", false, true);
+                    
+                    const emailContentDiv = document.getElementById('content-email');
+                    const researchContentDiv = document.getElementById('content-research');
+                    
+                    currentEmailText = data.result.formatted_email || "";
+                    currentResearchText = data.result.research_summary || "";
+
+                    emailContentDiv.textContent = currentEmailText;
+                    emailContentDiv.classList.remove('placeholder');
+
+                    researchContentDiv.textContent = currentResearchText;
+                    researchContentDiv.classList.remove('placeholder');
+
+                    btnCopy.disabled = false;
+                    stopRunningState();
+                } else if (data.status === 'failed') {
+                    appendLog("Agent execution halted due to failure.", true);
+                    stopRunningState();
+                }
+            })
+            .catch(err => {
+                appendLog(`Polling error: ${err.message}`, true);
+                stopRunningState();
+            });
+        }
+    </script>
+</body>
+</html>
